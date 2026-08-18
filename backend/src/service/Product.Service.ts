@@ -57,3 +57,32 @@ export async function getProduct(idOrSlug: string) {
 
     return mapProduct(row, variants, colorImageRows);
 }
+
+export async function getProductStock(idOrSlug: string) {
+    const [row] = await ProductRepository.findActiveProductByIdOrSlug(idOrSlug);
+    if (!row) throw new Error('PRODUCT_NOT_FOUND');
+
+    const skus = await ProductRepository.findSkuStockByProductId(row.product.id);
+
+    return skus.map((sku) => {
+        const availableQty = Math.max(0, (sku.stockQty ?? 0) - (sku.reservedQty ?? 0));
+        const stockStatus =
+            availableQty === 0 ? 'out_of_stock'
+                : availableQty <= 3 ? 'low_stock'
+                    : 'in_stoock';
+
+        return {
+            size: sku.size,
+            color: sku.color,
+            availableQty,
+            stockStatus
+        };
+    });
+}
+
+export async function registerView(idOrSlug: string) {
+    const [row] = await ProductRepository.findActiveProductByIdOrSlug(idOrSlug);
+    if (!row) throw new Error('PRODUCT_NOT_FOUND');
+
+    await ProductRepository.incrementViewCount(row.product.id);
+}

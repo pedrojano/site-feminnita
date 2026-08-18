@@ -14,6 +14,13 @@ export const env = {
     corsOrigins: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'],
 
     databaseUrl: required('DATABASE_URL'),
+    clientUrl: required('CLIENT_URL'),
+
+    google: {
+        clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+        redirectUri: process.env.GOOGLE_REDIRECT_URI ?? 'http://localhost:3333/api/store/auth/google/callback',
+    },
 
     asaas: {
         baseUrl: required('ASAAS_BASE_URL'),

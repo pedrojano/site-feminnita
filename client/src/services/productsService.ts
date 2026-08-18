@@ -1,5 +1,5 @@
-import { apiGet } from "./api";
-import type { StoreProduct } from "../types/product/products";
+import { apiGet, apiPost } from "./api";
+import type { SkuStock, StoreProduct } from "../types/product/products";
 
 export async function fetchProducts(options?: {
     featured?: boolean;
@@ -16,4 +16,12 @@ export async function fetchProducts(options?: {
 
 export async function fetchProduct(idOrSlug: string): Promise<StoreProduct | null> {
     return apiGet<StoreProduct>(`/api/store/products/${idOrSlug}`);
+}
+
+export async function fetchProductStock(idOrSlug: string): Promise<SkuStock[]> {
+    return (await apiGet<SkuStock[]>(`/api/store/products/${idOrSlug}/stock`)) ?? [];
+}
+
+export async function trackProductView(id: string): Promise<void> {
+    await apiPost(`/api/store/products/${id}/view`);
 }

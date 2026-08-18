@@ -17,3 +17,23 @@ export async function getOne(req: Request, res: Response) {
         res.status(404).json({ error: 'Produto não encontrado' });
     }
 }
+
+export async function getStock(req: Request, res: Response) {
+    const idOrSlug = req.params.idOrSlug as string;
+    try {
+        res.json(await ProductService.getProductStock(idOrSlug));
+    } catch (error) {
+        res.status(404).json({ error: 'Produto não encontrado' });
+    }
+}
+
+export async function registerView(req: Request, res: Response) {
+    const idOrSlug = req.params.idOrSlug as string;
+
+    try {
+        await ProductService.registerView(idOrSlug);
+        res.status(204).end();
+    } catch {
+        res.status(404).json({ error: 'Produto não encontrado' });
+    }
+}

@@ -5,6 +5,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Heart,
+    ImageOff,
     Minus,
     Plus,
     ShoppingCart,
@@ -12,9 +13,9 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef } from "react";
-import { useCart } from "../../hooks/useCart";
-import { PIX_DISCOUNT_RATE } from "../../utils/pricing";
-import { useColorSwatches } from "../../hooks/useColorSwatches";
+import { useCart } from "@/src/hooks/useCart";
+import { PIX_DISCOUNT_RATE } from "@/src/utils/pricing";
+import { useColorSwatches } from "@/src/hooks/useColorSwatches";
 
 interface ProductCardProps {
     product: {
@@ -46,6 +47,9 @@ export function ProductCard({ product }: ProductCardProps) {
         ? product.colorImages[selectedColor]
         : product.images;
 
+    const cover =
+        isHovered && displayImages[1] ? displayImages[1] : displayImages[0];
+
     const scrollColors = (dir: number) => {
         colorScrollRef.current?.scrollBy({ left: dir * 60, behavior: "smooth" });
     };
@@ -68,18 +72,21 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Product Image */}
             <Link href={`/produto/${product.id}`}>
                 <div className="relative mb-3 aspect-[2/3] overflow-hidden bg-gray-100">
-                    <Image
-                        src={
-                            isHovered && product.images[1]
-                                ? displayImages[1]
-                                : displayImages[0]
-                        }
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover transition-opacity duration-300"
-                        quality={90}
-                    />
+                    {cover ? (
+                        <Image
+                            src={cover}
+                            alt={product.name}
+                            fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            className="object-cover transition-opacity duration-300"
+                            quality={90}
+                        />
+                    ) : (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-300">
+                            <ImageOff size={32} />
+                            <span className="text-xs">Sem foto</span>
+                        </div>
+                    )}
 
                     {/* Favorite Button */}
                     <button
@@ -150,12 +157,12 @@ export function ProductCard({ product }: ProductCardProps) {
                                             key={color}
                                             onClick={() => setSelectedColor(color)}
                                             className={`h-8 w-8 shrink-0 overflow-hidden rounded-full border-2 transition-all ${selectedColor === color
-                                                    ? "scale-110 border-black"
-                                                    : "border-gray-300 hover:border-gray-400"
+                                                ? "scale-110 border-black"
+                                                : "border-gray-300 hover:border-gray-400"
                                                 }`}
                                             title={color}
                                         >
-                                            {swatch ? (
+                                            {swatch?.imageUrl ? (
                                                 <img
                                                     src={swatch.imageUrl}
                                                     alt={color}
@@ -194,8 +201,8 @@ export function ProductCard({ product }: ProductCardProps) {
                                     key={size}
                                     onClick={() => setSelectedSize(size)}
                                     className={`h-9 min-w-[2.25rem] rounded-md border px-2 text-sm font-medium transition-all ${selectedSize === size
-                                            ? "border-black bg-black text-white"
-                                            : "border-gray-300 hover:border-gray-500"
+                                        ? "border-black bg-black text-white"
+                                        : "border-gray-300 hover:border-gray-500"
                                         }`}
                                 >
                                     {size}
@@ -236,8 +243,8 @@ export function ProductCard({ product }: ProductCardProps) {
                 <button
                     onClick={addToCart}
                     className={`mt-3 flex w-full items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium transition-colors md:text-base ${added
-                            ? "bg-green-600 text-white"
-                            : "bg-[#8C2F39] text-[#FAF6F2] hover:bg-[#7a2832]"
+                        ? "bg-green-600 text-white"
+                        : "bg-[#8C2F39] text-[#FAF6F2] hover:bg-[#7a2832]"
                         }`}
                 >
                     {added ? <Check size={18} /> : <ShoppingCart size={18} />}

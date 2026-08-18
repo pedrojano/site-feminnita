@@ -58,5 +58,26 @@ export async function sendOrderShipped(data: OrderEmailData & { trackingCode?: s
     }
 }
 
+export async function sendPasswordReset(data: {
+    customerName: string;
+    customerEmail: string;
+    resetUrl: string
+}) {
+
+    try {
+        await EmailClient.sendEmail({
+            to: data.customerEmail,
+            subject: 'Redefinir sua senha - Feminnita',
+            html: `<h2>Oi, ${data.customerName}!</h2>
+                <p>Recebemos um pedido para redefinir a senha da sua conta.</p>
+                <p><a href="${data.resetUrl}">Clique aqui para criar uma nova senha</a> — o link vale por 30 minutos.</p>
+                <p>Se não foi você, ignore este e-mail — sua senha continua a mesma.</p>
+                <p>— Equipe Feminnita</p>
+            `,
+        });
+    } catch (error) {
+        console.error(`Email de reset falhou (${data.customerEmail}):`, error);
+    }
+}
 
 
