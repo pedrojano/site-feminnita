@@ -10,7 +10,7 @@ import { MobileFilterSheet } from "@/src/components/catalog/MobileFilterSheet";
 import { SearchBar } from "@/src/components/catalog/SearchBar";
 import { SuggestionChips } from "@/src/components/catalog/SuggestionChips";
 import { Toolbar } from "@/src/components/catalog/Toolbar";
-import { useProductsPage } from "@/src/hooks/useProductPage";
+import { useProductsPage } from "@/src/hooks/useProductsPage";
 
 function ProdutosContent() {
     const vm = useProductsPage();

@@ -1,184 +1,110 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
+import { useCart } from "../hooks/useCart";
+import { useColorSwatches } from "../hooks/useColorSwatches";
+import { fetchProduct, trackProductView } from "../services/productsService";
 import {
-    MAX_PRICE,
-    countActiveFilters,
-    filterProducts,
-    sortProducts,
-} from "../utils/catalog";
-import { buildTree, listGrandchildCategories } from "../utils/categories";
-import { fetchCategories } from "../services/categoriesService";
-import { fetchColorSwatches } from "../services/colorsService";
-import { fetchProducts } from "../services/productsService";
+    trackAddToCartAnalytics,
+    trackViewItemAnalytics,
+} from "../utils/analytics";
+import { buildCartItem, getDisplayImages } from "../utils/product";
 import type { StoreProduct } from "../types/product/products";
-import type { ColorSwatch } from "../types/colors/colors";
-import type {
-    CategoryNode,
-    CategoryRow,
-} from "../types/categories/categories";
-import type {
-    CatalogFacets,
-    ProductFilters,
-    SortOption,
-} from "../types/catalog/catalog";
 
-export function useProductsPage() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const pathname = usePathname();
+export function useProductPage() {
+    const params = useParams();
+    const cart = useCart();
+    const swatches = useColorSwatches();
 
-    const getParam = (key: string, fallback = "") =>
-        searchParams.get(key) || fallback;
-    const getArray = (key: string) => {
-        const v = searchParams.get(key);
-        return v ? v.split(",").filter(Boolean) : [];
-    };
-
-    const [query, setQuery] = useState(getParam("q"));
-    const [category, setCategory] = useState(getParam("cat", "all"));
-    const [colors, setColors] = useState<string[]>(getArray("cores"));
-    const [sizes, setSizes] = useState<string[]>(getArray("tamanhos"));
-    const [maxPrice, setMaxPrice] = useState(
-        Number(getParam("max", String(MAX_PRICE))),
-    );
-    const [sort, setSort] = useState<SortOption>(
-        getParam("ord", "relevance") as SortOption,
-    );
-    const [showFilters, setShowFilters] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [allProducts, setAllProducts] = useState<StoreProduct[]>([]);
-    const [results, setResults] = useState<StoreProduct[]>([]);
-    const [colorSwatches, setColorSwatches] = useState<ColorSwatch[]>([]);
-    const [categoryOptions, setCategoryOptions] = useState<CategoryRow[]>([]);
-
-    const categoryTree: CategoryNode[] = buildTree(categoryOptions);
+    const [product, setProduct] = useState<StoreProduct | null>(null);
+    const [loadingProduct, setLoadingProduct] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(0);
+    const [showVideo, setShowVideo] = useState(false);
+    const [selectedColor, setSelectedColor] = useState("");
+    const [selectedSize, setSelectedSize] = useState("");
+    const [quantity, setQuantity] = useState(1);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [toast, setToast] = useState("");
+    const [stickyVisible, setStickyVisible] = useState(false);
+    const mainCTARef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        Promise.all([
-            fetchProducts(),
-            fetchColorSwatches(),
-            fetchCategories(),
-        ]).then(([products, swatches, catOpts]) => {
-            setAllProducts(products);
-            setColorSwatches(swatches);
-            setCategoryOptions(catOpts);
+        const idOrSlug = Array.isArray(params.id) ? params.id[0] : params.id;
+        if (!idOrSlug) return;
+        setLoadingProduct(true);
+        fetchProduct(idOrSlug).then((p) => {
+            setProduct(p);
+            setLoadingProduct(false);
         });
-    }, []);
-
-    const availableSizes = Array.from(
-        new Set(allProducts.flatMap((p) => p.sizes)),
-    );
-
-    const facets: CatalogFacets = {
-        colors: colorSwatches.map((c) => c.name),
-        categories: listGrandchildCategories(categoryOptions).map((c) => c.name),
-        sizes: availableSizes,
-    };
-
-    const pushParams = useCallback(
-        (updates: Record<string, string>) => {
-            const params = new URLSearchParams(searchParams.toString());
-            Object.entries(updates).forEach(([k, v]) => {
-                if (v && v !== "all" && v !== "relevance" && v !== String(MAX_PRICE))
-                    params.set(k, v);
-            });
-            router.replace(`${pathname}?${params.toString()}`, {
-                scroll: false,
-            });
-        },
-        [searchParams, router, pathname],
-    );
+    }, [params.id]);
 
     useEffect(() => {
-        pushParams({
-            q: query,
-            cat: category,
-            cores: colors.join(","),
-            tamanhos: sizes.join(","),
-            max: String(maxPrice),
-            ord: sort,
-        });
-    }, [query, category, colors, sizes, maxPrice, sort]);
+        if (!mainCTARef.current) return;
+        const obs = new IntersectionObserver(
+            ([entry]) => setStickyVisible(!entry.isIntersecting),
+            { threshold: 0 },
+        );
+        obs.observe(mainCTARef.current);
+        return () => obs.disconnect();
+    }, [product]);
 
     useEffect(() => {
-        setLoading(true);
-        const timer = setTimeout(() => {
-            const filters: ProductFilters = {
-                query,
-                category,
-                colors,
-                sizes,
-                maxPrice,
-                sort,
-            };
-            const filtered = filterProducts(allProducts, filters, facets);
-            setResults(sortProducts(filtered, sort));
-            setLoading(false);
-        }, 200);
-        return () => clearTimeout(timer);
-    }, [
-        query,
-        category,
-        colors,
-        sizes,
-        maxPrice,
-        sort,
-        allProducts,
-        colorSwatches,
-        categoryOptions,
-    ]);
+        if (!product) return;
+        setSelectedColor(product.colors[0] || "");
+        trackProductView(product.id);
+        trackViewItemAnalytics(product);
+    }, [product]);
 
-    const toggleColor = (name: string) =>
-        setColors((prev) =>
-            prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name],
-        );
-
-    const toggleSize = (size: string) =>
-        setSizes((prev) =>
-            prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size],
-        );
-
-    const clearAll = () => {
-        setQuery("");
-        setCategory("all");
-        setColors([]);
-        setSizes([]);
-        setMaxPrice(MAX_PRICE);
-        setSort("relevance");
+    const showToast = (msg: string) => {
+        setToast(msg);
+        setTimeout(() => setToast(""), 2800);
     };
 
-    const activeCount = countActiveFilters({
-        category,
-        colors,
-        sizes,
-        maxPrice,
-    });
+    const selectColor = (color: string) => {
+        setSelectedColor(color);
+        setSelectedImage(0);
+    };
+
+    const selectImage = (index: number) => {
+        setShowVideo(false);
+        setSelectedImage(index);
+    };
+
+    const handleAddToCart = () => {
+        if (!product) return;
+        if (!selectedSize) {
+            showToast("Selecione um tamanho");
+            return;
+        }
+
+        cart.add(buildCartItem({ product, selectedSize, selectedColor, quantity }));
+        trackAddToCartAnalytics(product, quantity);
+        showToast(`${quantity}x adicionado ao carrinho!`);
+    };
+
+    const displayImages = product ? getDisplayImages(product, selectedColor) : [];
 
     return {
-        query,
-        setQuery,
-        category,
-        setCategory,
-        colors,
-        toggleColor,
-        sizes,
-        toggleSize,
-        maxPrice,
-        setMaxPrice,
-        sort,
-        setSort,
-        showFilters,
-        setShowFilters,
-        loading,
-        results,
-        colorSwatches,
-        categoryOptions,
-        categoryTree,
-        availableSizes,
-        activeCount,
-        clearAll,
-        maxPriceLimit: MAX_PRICE,
+        product,
+        loadingProduct,
+        swatches,
+        selectedImage,
+        showVideo,
+        setShowVideo,
+        selectImage,
+        selectedColor,
+        selectColor,
+        selectedSize,
+        setSelectedSize,
+        quantity,
+        setQuantity,
+        isFavorite,
+        setIsFavorite,
+        toast,
+        stickyVisible,
+        mainCTARef,
+        displayImages,
+        handleAddToCart,
     };
 }

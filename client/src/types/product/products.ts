@@ -1,4 +1,4 @@
-import type { ColorSwatch } from "@/src/types/colors/colors";
+import type { ColorSwatch } from "../colors/colors";
 import type { RefObject } from "react";
 
 export type StoreProduct = {
@@ -66,7 +66,7 @@ export type QuantitySelectorProps = {
 };
 
 export type ProductActionsProps = {
-  ctaRef: RefObject<HTMLDivElement>;
+  ctaRef: RefObject<HTMLDivElement | null>;
   productId: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
@@ -89,4 +89,11 @@ export type PriceBlockProps = {
 export type ProductDescriptionProps = {
   productName: string;
   description: string;
+};
+
+export type SkuStock = {
+  size: string;
+  color: string | null;
+  availableQty: number;
+  stockStatus: "in_stock" | "low_stock" | "out_of_stock";
 };
