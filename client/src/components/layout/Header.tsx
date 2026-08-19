@@ -1,9 +1,11 @@
 "use client";
 
-import { Heart, Menu, Search, ShoppingCart, User, X } from "lucide-react";
+import { Heart, LogOut, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useCart } from "../../hooks/useCart";
+import { useAuth } from "@/src/hooks/useAuth";
+import { useCart } from "@/src/hooks/useCart";
 
 const NAV_LINKS = [
   { href: "/produtos", label: "PRODUTOS" },
@@ -13,8 +15,18 @@ const NAV_LINKS = [
 ];
 
 export function Header() {
+  const router = useRouter();
   const { count: cartCount } = useCart();
+  const { customer, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const firstName = customer?.name.split(" ")[0];
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white">
@@ -59,12 +71,48 @@ export function Header() {
             <Link href="/busca" className="-m-2 p-2.5 hover:text-gray-600">
               <Search size={20} />
             </Link>
-            <Link
-              href="/minha-conta"
-              className="-m-2 hidden p-2.5 hover:text-gray-600 sm:block"
-            >
-              <User size={20} />
-            </Link>
+
+            {customer ? (
+              <div className="group relative hidden sm:block">
+                <Link
+                  href="/minha-conta"
+                  className="-m-2 flex items-center gap-1.5 p-2.5 hover:text-gray-600"
+                >
+                  <User size={20} />
+                  <span className="max-w-[100px] truncate text-sm font-medium">
+                    {firstName}
+                  </span>
+                </Link>
+
+                <div className="invisible absolute right-0 top-full pt-2 opacity-0 transition-all duration-150 group-hover:visible group-hover:opacity-100">
+                  <div className="w-44 rounded-xl border border-gray-100 bg-white py-1 shadow-lg">
+                    <Link
+                      href="/minha-conta"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      <User size={15} />
+                      Minha conta
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <LogOut size={15} />
+                      Sair
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="-m-2 hidden p-2.5 hover:text-gray-600 sm:block"
+                title="Entrar"
+              >
+                <User size={20} />
+              </Link>
+            )}
+
             <Link
               href="/favoritos"
               className="relative -m-2 hidden p-2.5 hover:text-gray-600 sm:block"
@@ -99,12 +147,12 @@ export function Header() {
             ))}
             <div className="mt-1 flex gap-1 border-t pt-3 sm:hidden">
               <Link
-                href="/minha-conta"
+                href={customer ? "/minha-conta" : "/login"}
                 onClick={() => setMenuOpen(false)}
                 className="flex flex-1 items-center gap-2 rounded-lg py-2 text-sm font-medium text-gray-700 hover:text-[#8C2F39]"
               >
                 <User size={18} />
-                Minha conta
+                {customer ? `Olá, ${firstName}` : "Entrar / Criar conta"}
               </Link>
               <Link
                 href="/favoritos"
@@ -115,6 +163,18 @@ export function Header() {
                 Favoritos
               </Link>
             </div>
+            {customer && (
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  handleLogout();
+                }}
+                className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700 hover:text-red-600 sm:hidden"
+              >
+                <LogOut size={18} />
+                Sair
+              </button>
+            )}
           </nav>
         )}
       </div>

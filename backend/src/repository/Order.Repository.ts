@@ -124,6 +124,13 @@ export function findItemsByOrderID(orderId: string) {
     });
 }
 
+export async function findItemsByOrderIds(orderIds: string[]) {
+    if (orderIds.length === 0) return [];
+    return db.query.orderItems.findMany({
+        where: inArray(orderItems.orderId, orderIds),
+    });
+}
+
 export function findCustomerForCharge(customerId: string) {
     return db.query.customers.findFirst({ where: eq(customers.id, customerId) })
 }

@@ -4,29 +4,9 @@ import * as OrderDomain from '../domain/Order.Domain';
 import * as EmailService from '../integrations/resend/Services';
 import * as MelhorEnvio from '../integrations/melhorEnvio/Service';
 import * as AdminOrderService from '../service/OrderLifecycle.Service';
+import type { CreateOrderInput } from '../types/Order';
 
-export type CreateOrderInput = {
-    customerId: string;
-    items: {
-        productId: string;
-        size: string;
-        color?: string;
-        quantity: number;
-    }[];
-    paymentMethod: 'pix' | 'boleto' | 'card';
-    installments?: number;
-    creditCard?: {
-        holderName: string;
-        number: string;
-        expiryMonth: string;
-        expiryYear: string;
-        ccv: string;
-    };
-    remoteIp?: string;
-    couponCode?: string;
-    shippingAddress: Record<string, unknown>;
-    shippingServiceId: number;
-};
+
 
 export async function createOrder(input: CreateOrderInput) {
     if (input.items.length === 0) {
@@ -211,8 +191,16 @@ export async function createOrder(input: CreateOrderInput) {
     }
 }
 
-export function listMyOrders(customerId: string) {
-    return OrderRepository.findOrdersByCustomerId(customerId);
+export async function listMyOrders(customerId: string) {
+    const myOrders = await OrderRepository.findOrdersByCustomerId(customerId);
+    if (myOrders.length === 0) return [];
+
+    const items = await OrderRepository.findItemsByOrderIds(myOrders.map((o) => o.id));
+
+    return myOrders.map((order) => ({
+        ...order,
+        items: items.filter((item) => item.orderId === order.id),
+    }));
 }
 
 export async function getMyOrder(orderId: string, customerId: string) {

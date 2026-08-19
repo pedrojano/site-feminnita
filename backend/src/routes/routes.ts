@@ -10,10 +10,12 @@ import { storeShippingRoutes } from './Shipping.Routes';
 import { storeSiteSettingsRoutes } from './SiteSettings.Routes';
 import { asaaswebhookRoutes } from '../integrations/asass/WebhookRoutes';
 import { storeHeroSlideRoutes } from './HeroSlide.Routes';
+import { storeAccountRoutes } from './Account.Routes';
 
 export const routes = Router();
 
 routes.use('/api/store/auth', storeAuthRoutes);
+routes.use('/api/store/account', storeAccountRoutes);
 routes.use('/api/store/orders', storeOrderRouter);
 routes.use('/api/store/categories', storeCategoryRoutes);
 routes.use('/api/store/products', storeProductRoutes);
