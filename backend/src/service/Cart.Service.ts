@@ -25,7 +25,7 @@ export async function getCart(customerId: string) {
             ...item,
             productName: product.name,
             productImage: Array.isArray(product.images) ? product.images[0] ?? null : null,
-            unitPrice: OrderDomain.fromCents(OrderDomain.resolveUnitPriceCents(product)),
+            unitPrice: Number(OrderDomain.fromCents(OrderDomain.resolveUnitPriceCents(product))),
         };
     });
     return { items: enriched };

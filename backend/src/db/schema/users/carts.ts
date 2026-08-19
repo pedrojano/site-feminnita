@@ -7,6 +7,7 @@ export type CartItem = {
     size: string;
     color?: string;
     quantity: number;
+    selected?: boolean;
 };
 
 export const carts = pgTable('carts', {

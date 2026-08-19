@@ -23,5 +23,5 @@ export async function fetchProductStock(idOrSlug: string): Promise<SkuStock[]> {
 }
 
 export async function trackProductView(id: string): Promise<void> {
-    await apiPost(`/api/store/products/${id}/view`);
+    await apiPost(`/api/store/products/${id}/view`).catch(() => { });
 }
