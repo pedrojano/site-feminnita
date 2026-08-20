@@ -19,7 +19,7 @@ export default function CartPage() {
     } = useCart();
 
     const allSelected = items.length > 0 && items.every(isSelected);
-    const shipping = selectedSubtotal >= 299 || selectedCount === 0 ? 0 : 15;
+    const shipping = selectedSubtotal >= 299 || selectedCount === 0 ? 0 : 15; // todo: revisar o valor do frete que aparece no resumo do pedido (20/08)
     const total = selectedSubtotal + shipping;
 
     if (items.length === 0) {

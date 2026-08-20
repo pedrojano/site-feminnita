@@ -19,3 +19,6 @@ export * from './settings/settings';
 
 //
 export * from './slides/hero';
+
+//
+export * from './integrations/bling';

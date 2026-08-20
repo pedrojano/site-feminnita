@@ -4,7 +4,7 @@ import * as OrderDomain from '../domain/Order.Domain';
 import * as EmailService from '../integrations/resend/Services';
 import * as MelhorEnvio from '../integrations/melhorEnvio/Service';
 import * as AdminOrderService from '../service/OrderLifecycle.Service';
-import type { CreateOrderInput } from '../types/Order';
+import type { CreateOrderInput } from '../types/order';
 
 
 
