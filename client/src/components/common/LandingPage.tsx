@@ -121,14 +121,15 @@ export function LandingPage({
                             {products.map((product) => (
                                 <div key={product.id} className="group">
                                     <Link href={`/produto/${product.id}`}>
-                                        <div className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-gray-100">
+                                        <div className="relative mb-3 aspect-[3/4] overflow-hidden rounded-xl bg-gray-100">
                                             {product.images?.[0] ? (
                                                 <Image
                                                     src={product.images[0]}
                                                     alt={product.name}
                                                     fill
                                                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                                    className="object-cover object-top transition-opacity duration-300"
+                                                    quality={90}
                                                 />
                                             ) : (
                                                 <div className="flex h-full w-full items-center justify-center text-gray-300">
