@@ -1,3 +1,6 @@
+import { env } from '../../config/env';
+import { AsaasCustomer, AsaasPayment, AsaasPixQrCode } from './types';
+
 async function request<T>(path: string, options: {
     method?: string;
     body?: unknown
@@ -21,7 +24,6 @@ async function request<T>(path: string, options: {
     return response.json() as Promise<T>;
 }
 
-import { AsaasCustomer, AsaasPayment, AsaasPixQrCode } from './types';
 
 export function createCustomer(input: {
     name: string;

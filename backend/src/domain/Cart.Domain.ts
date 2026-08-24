@@ -24,6 +24,7 @@ export function sanitizeItems(raw: unknown): CartItem[] {
             size: item.size,
             color: typeof item.color === 'string' ? item.color : undefined,
             quantity: Math.min(Math.max(Math.round(item.quantity), 1), MAX_QUANTITY_PER_ITEM),
+            selected: item.selected !== false,
         }));
 }
 
@@ -35,6 +36,7 @@ export function mergeItems(saved: CartItem[], incoming: CartItem[]): CartItem[] 
         const existing = merged.get(key);
         if (existing) {
             existing.quantity = Math.min(existing.quantity + item.quantity, MAX_QUANTITY_PER_ITEM);
+            existing.selected = existing.selected !== false || item.selected !== false;
         } else {
             merged.set(key, { ...item });
         }

@@ -4,29 +4,9 @@ import * as OrderDomain from '../domain/Order.Domain';
 import * as EmailService from '../integrations/resend/Services';
 import * as MelhorEnvio from '../integrations/melhorEnvio/Service';
 import * as AdminOrderService from '../service/OrderLifecycle.Service';
+import type { CreateOrderInput } from '../types/order';
 
-export type CreateOrderInput = {
-    customerId: string;
-    items: {
-        productId: string;
-        size: string;
-        color?: string;
-        quantity: number;
-    }[];
-    paymentMethod: 'pix' | 'boleto' | 'card';
-    installments?: number;
-    creditCard?: {
-        holderName: string;
-        number: string;
-        expiryMonth: string;
-        expiryYear: string;
-        ccv: string;
-    };
-    remoteIp?: string;
-    couponCode?: string;
-    shippingAddress: Record<string, unknown>;
-    shippingServiceId: number;
-};
+
 
 export async function createOrder(input: CreateOrderInput) {
     if (input.items.length === 0) {
@@ -211,8 +191,37 @@ export async function createOrder(input: CreateOrderInput) {
     }
 }
 
-export function listMyOrders(customerId: string) {
-    return OrderRepository.findOrdersByCustomerId(customerId);
+export async function previewCoupon(customerId: string, couponCode: string, subtotal: number) {
+
+    const coupon = await OrderRepository.findCouponByCode(couponCode);
+    if (!coupon) throw new Error('COUPON_NOT_FOUND');
+
+    const alreadyUsed = await OrderRepository.findOrderByCustomerAndCoupon(customerId, coupon.id);
+    if (alreadyUsed) throw new Error('COUPON_ALREADY_USED');
+
+    if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
+        throw new Error('COUPON_MAX_USES_REACHED');
+    }
+
+    const subtotalCents = OrderDomain.toCents(subtotal);
+    const discountCents = OrderDomain.calculateCouponDiscountCents(coupon, subtotalCents);
+
+    return {
+        code: coupon.code,
+        discount: Number(OrderDomain.fromCents(discountCents)),
+    };
+}
+
+export async function listMyOrders(customerId: string) {
+    const myOrders = await OrderRepository.findOrdersByCustomerId(customerId);
+    if (myOrders.length === 0) return [];
+
+    const items = await OrderRepository.findItemsByOrderIds(myOrders.map((o) => o.id));
+
+    return myOrders.map((order) => ({
+        ...order,
+        items: items.filter((item) => item.orderId === order.id),
+    }));
 }
 
 export async function getMyOrder(orderId: string, customerId: string) {

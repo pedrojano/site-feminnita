@@ -32,7 +32,7 @@ export function ProductActions({
                 </button>
             </div>
 
-            <Link href={`/provador?produto=${productId}`}>
+            {/* <Link href={`/provador?produto=${productId}`}>
                 <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-[#8C2F39] py-4 font-semibold text-[#8C2F39] transition-all hover:bg-[#8C2F39] hover:text-[#FAF6F2]">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -50,7 +50,7 @@ export function ProductActions({
                     </svg>
                     Provador Virtual
                 </button>
-            </Link>
+            </Link> */}
         </>
     );
 }

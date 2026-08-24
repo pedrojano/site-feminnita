@@ -1,8 +1,10 @@
 "use client";
 
+import { Toaster } from "sonner";
 import { WhatsAppButton } from "../components/common/WhatsAppButton";
-import { CartProvider } from "../hooks/useCart";
-import { ColorSwatchesProvider } from "../hooks/useColorSwatches";
+import { AuthProvider } from "../hooks/count/useAuth";
+import { CartProvider } from "../hooks/cart/useCart";
+import { ColorSwatchesProvider } from "../hooks/color/useColorSwatches";
 
 export default function ClientBody({
     children,
@@ -10,13 +12,16 @@ export default function ClientBody({
     children: React.ReactNode;
 }) {
     return (
-        <ColorSwatchesProvider>
-            <CartProvider>
-                <div className="antialiased">
-                    {children}
-                    <WhatsAppButton />
-                </div>
-            </CartProvider>
-        </ColorSwatchesProvider>
+        <AuthProvider>
+            <ColorSwatchesProvider>
+                <CartProvider>
+                    <div className="antialiased">
+                        {children}
+                        <WhatsAppButton />
+                        <Toaster position="top-center" richColors closeButton duration={3000} />
+                    </div>
+                </CartProvider>
+            </ColorSwatchesProvider>
+        </AuthProvider>
     );
 }

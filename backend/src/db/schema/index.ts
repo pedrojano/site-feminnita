@@ -7,6 +7,7 @@ export * from './product/product-skus';
 export * from './users/admin';
 export * from './users/customers';
 export * from './users/addresses';
+export * from './users/account';
 //
 export * from './order/orders';
 export * from './order/items';
@@ -18,3 +19,6 @@ export * from './settings/settings';
 
 //
 export * from './slides/hero';
+
+//
+export * from './integrations/bling';
