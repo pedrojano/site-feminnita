@@ -79,7 +79,15 @@ export async function insertOrderWithItems(
         if (couponId) {
             const consumed = await tx
                 .update(coupons)
-                .set({ usedCount: sql`${coupons.usedCount} + 1` })
+                .set({
+                    usedCount: sql`${coupons.usedCount} + 1`,
+                    active: sql`CASE
+                        WHEN ${coupons.maxUses} IS NOT NULL AND ${coupons.usedCount} + 1 >= ${coupons.maxUses}
+                        THEN false
+                        ELSE ${coupons.active}
+                    END`,
+                    updatedAt: new Date(),
+                })
                 .where(
                     and(
                         eq(coupons.id, couponId),
@@ -164,3 +172,4 @@ export async function cancelOrdeAndReleaseStock(orderId: string) {
         }
     }
 }
+

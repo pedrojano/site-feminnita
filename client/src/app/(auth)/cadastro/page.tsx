@@ -2,7 +2,7 @@
 
 import { ApiError } from "@/src/services/api";
 import { GOOGLE_LOGIN_URL } from "@/src/services/authService";
-import { useAuth } from "@/src/hooks/useAuth";
+import { useAuth } from "@/src/hooks/count/useAuth";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

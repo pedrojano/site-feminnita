@@ -2,15 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { useCart } from "../hooks/useCart";
-import { useColorSwatches } from "../hooks/useColorSwatches";
-import { fetchProduct, trackProductView } from "../services/productsService";
+import { useCart } from "../cart/useCart";
+import { toast } from "sonner"
+import { useColorSwatches } from "../../hooks/color/useColorSwatches";
+import {
+    fetchProduct,
+    fetchProductStock,
+    trackProductView,
+} from "@/src/services/productsService";
 import {
     trackAddToCartAnalytics,
     trackViewItemAnalytics,
-} from "../utils/analytics";
-import { buildCartItem, getDisplayImages } from "../utils/product";
-import type { StoreProduct } from "../types/product/products";
+} from "@/src/utils/analytics";
+import { buildCartItem, getDisplayImages } from "@/src/utils/product";
+import type { SkuStock, StoreProduct } from "@/src/types/product/products";
 
 export function useProductPage() {
     const params = useParams();
@@ -19,13 +24,13 @@ export function useProductPage() {
 
     const [product, setProduct] = useState<StoreProduct | null>(null);
     const [loadingProduct, setLoadingProduct] = useState(false);
+    const [skus, setSkus] = useState<SkuStock[]>([]);
     const [selectedImage, setSelectedImage] = useState(0);
     const [showVideo, setShowVideo] = useState(false);
     const [selectedColor, setSelectedColor] = useState("");
     const [selectedSize, setSelectedSize] = useState("");
     const [quantity, setQuantity] = useState(1);
     const [isFavorite, setIsFavorite] = useState(false);
-    const [toast, setToast] = useState("");
     const [stickyVisible, setStickyVisible] = useState(false);
     const mainCTARef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +43,13 @@ export function useProductPage() {
             setLoadingProduct(false);
         });
     }, [params.id]);
+
+    useEffect(() => {
+        if (!product) return;
+        fetchProductStock(product.id)
+            .then(setSkus)
+            .catch(() => setSkus([]));
+    }, [product]);
 
     useEffect(() => {
         if (!mainCTARef.current) return;
@@ -56,11 +68,6 @@ export function useProductPage() {
         trackViewItemAnalytics(product);
     }, [product]);
 
-    const showToast = (msg: string) => {
-        setToast(msg);
-        setTimeout(() => setToast(""), 2800);
-    };
-
     const selectColor = (color: string) => {
         setSelectedColor(color);
         setSelectedImage(0);
@@ -71,16 +78,39 @@ export function useProductPage() {
         setSelectedImage(index);
     };
 
+    const availableFor = (size: string, color: string): number | null => {
+        if (skus.length === 0) return null;
+
+        const sku = skus.find((s) => {
+            const sizeMatch = s.size === size;
+            const colorMatch =
+                !color || !s.color || s.color.toLowerCase() === color.toLowerCase();
+            return sizeMatch && colorMatch;
+        });
+
+        return sku ? sku.availableQty : 0;
+    };
+
     const handleAddToCart = () => {
         if (!product) return;
         if (!selectedSize) {
-            showToast("Selecione um tamanho");
+            toast.warning("Selecione um tamanho");
+            return;
+        }
+
+        const available = availableFor(selectedSize, selectedColor);
+        if (available !== null && available === 0) {
+            toast.error("Este tamanho está esgotado");
+            return;
+        }
+        if (available !== null && quantity > available) {
+            toast.error(`Só ${available} unidade${available > 1 ? "s" : ""} disponível${available > 1 ? "eis" : ""}`);
             return;
         }
 
         cart.add(buildCartItem({ product, selectedSize, selectedColor, quantity }));
         trackAddToCartAnalytics(product, quantity);
-        showToast(`${quantity}x adicionado ao carrinho!`);
+        toast.success(`${quantity}x adicionado ao carrinho!`);
     };
 
     const displayImages = product ? getDisplayImages(product, selectedColor) : [];
@@ -88,6 +118,7 @@ export function useProductPage() {
     return {
         product,
         loadingProduct,
+        skus,
         swatches,
         selectedImage,
         showVideo,
@@ -101,7 +132,6 @@ export function useProductPage() {
         setQuantity,
         isFavorite,
         setIsFavorite,
-        toast,
         stickyVisible,
         mainCTARef,
         displayImages,

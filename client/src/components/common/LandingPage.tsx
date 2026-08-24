@@ -1,7 +1,7 @@
 "use client";
 
 import { Header } from "../layout/Header";
-import { useCart } from "../../hooks/useCart";
+import { useCart } from "../../hooks/cart/useCart";
 import type { StoreProduct } from "../../types/product/products";
 import { ImageOff, ShoppingCart } from "lucide-react";
 import Image from "next/image";

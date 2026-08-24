@@ -3,7 +3,7 @@
 import { MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { Address, AddressInput } from "@/src/types/account/account";
-import { useCep } from "../../hooks/useCep";
+import { useCep } from "../../hooks/count/useCep";
 
 const EMPTY: AddressInput = {
     label: "Principal",

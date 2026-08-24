@@ -191,6 +191,27 @@ export async function createOrder(input: CreateOrderInput) {
     }
 }
 
+export async function previewCoupon(customerId: string, couponCode: string, subtotal: number) {
+
+    const coupon = await OrderRepository.findCouponByCode(couponCode);
+    if (!coupon) throw new Error('COUPON_NOT_FOUND');
+
+    const alreadyUsed = await OrderRepository.findOrderByCustomerAndCoupon(customerId, coupon.id);
+    if (alreadyUsed) throw new Error('COUPON_ALREADY_USED');
+
+    if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
+        throw new Error('COUPON_MAX_USES_REACHED');
+    }
+
+    const subtotalCents = OrderDomain.toCents(subtotal);
+    const discountCents = OrderDomain.calculateCouponDiscountCents(coupon, subtotalCents);
+
+    return {
+        code: coupon.code,
+        discount: Number(OrderDomain.fromCents(discountCents)),
+    };
+}
+
 export async function listMyOrders(customerId: string) {
     const myOrders = await OrderRepository.findOrdersByCustomerId(customerId);
     if (myOrders.length === 0) return [];

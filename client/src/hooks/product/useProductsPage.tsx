@@ -7,22 +7,22 @@ import {
     countActiveFilters,
     filterProducts,
     sortProducts,
-} from "../utils/catalog";
-import { buildTree, listGrandchildCategories } from "../utils/categories";
-import { fetchCategories } from "../services/categoriesService";
-import { fetchColorSwatches } from "../services/colorsService";
-import { fetchProducts } from "../services/productsService";
-import type { StoreProduct } from "../types/product/products";
-import type { ColorSwatch } from "../types/colors/colors";
+} from "../../utils/catalog";
+import { buildTree, listGrandchildCategories } from "../../utils/categories";
+import { fetchCategories } from "../../services/categoriesService";
+import { fetchColorSwatches } from "../../services/colorsService";
+import { fetchProducts } from "../../services/productsService";
+import type { StoreProduct } from "../../types/product/products";
+import type { ColorSwatch } from "../../types/colors/colors";
 import type {
     CategoryNode,
     CategoryRow,
-} from "../types/categories/categories";
+} from "../../types/categories/categories";
 import type {
     CatalogFacets,
     ProductFilters,
     SortOption,
-} from "../types/catalog/catalog";
+} from "../../types/catalog/catalog";
 
 export function useProductsPage() {
     const searchParams = useSearchParams();
@@ -52,7 +52,6 @@ export function useProductsPage() {
     const [results, setResults] = useState<StoreProduct[]>([]);
     const [colorSwatches, setColorSwatches] = useState<ColorSwatch[]>([]);
     const [categoryOptions, setCategoryOptions] = useState<CategoryRow[]>([]);
-
     const categoryTree: CategoryNode[] = buildTree(categoryOptions);
 
     useEffect(() => {

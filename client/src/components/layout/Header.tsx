@@ -1,11 +1,12 @@
 "use client";
 
 import { Heart, LogOut, Menu, Search, ShoppingCart, User, X } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useAuth } from "@/src/hooks/useAuth";
-import { useCart } from "@/src/hooks/useCart";
+import { useAuth } from "../../hooks/count/useAuth";
+import { useCart } from "../../hooks/cart/useCart";
 
 const NAV_LINKS = [
   { href: "/produtos", label: "PRODUTOS" },
@@ -24,6 +25,7 @@ export function Header() {
 
   const handleLogout = async () => {
     await logout();
+    toast.success("Você saiu da conta");
     router.push("/");
     router.refresh();
   };

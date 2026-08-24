@@ -1,8 +1,8 @@
 "use client";
 
-import { ApiError } from "@/src/services/api";
-import { GOOGLE_LOGIN_URL } from "@/src/services/authService";
-import { useAuth } from "@/src/hooks/useAuth";
+import { ApiError } from "../../../services/api";
+import { GOOGLE_LOGIN_URL } from "../../../services/authService";
+import { useAuth } from "../../../hooks/count/useAuth";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";

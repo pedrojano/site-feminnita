@@ -13,9 +13,10 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef } from "react";
-import { useCart } from "@/src/hooks/useCart";
+import { useCart } from "../../hooks/cart/useCart";
 import { PIX_DISCOUNT_RATE } from "@/src/utils/pricing";
-import { useColorSwatches } from "@/src/hooks/useColorSwatches";
+import { useColorSwatches } from "../../hooks/color/useColorSwatches";
+import { ColorCarousel } from "./ColorCarousel";
 
 interface ProductCardProps {
     product: {
@@ -131,63 +132,18 @@ export function ProductCard({ product }: ProductCardProps) {
                 {/* Color Selector */}
                 {product.colors.length > 0 && (
                     <div className="pt-2">
-                        <p className="mb-2 text-xs text-gray-600">
+                        <p className="mb-2 text-center text-xs text-gray-600">
                             Cor: <span className="font-medium">{selectedColor}</span>
                         </p>
-                        <div className="flex items-center gap-1">
-                            <button
-                                type="button"
-                                onClick={() => scrollColors(-1)}
-                                className="shrink-0 rounded-full p-0.5 text-gray-400 hover:text-gray-700"
-                                aria-label="Cores anteriores"
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-                            <div
-                                ref={colorScrollRef}
-                                className="flex gap-2 overflow-x-auto scroll-smooth pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                            >
-                                {product.colors.map((color) => {
-                                    const swatch = swatches.find(
-                                        (s) => s.name.toLowerCase() === color.toLowerCase(),
-                                    );
-
-                                    return (
-                                        <button
-                                            key={color}
-                                            onClick={() => setSelectedColor(color)}
-                                            className={`h-8 w-8 shrink-0 overflow-hidden rounded-full border-2 transition-all ${selectedColor === color
-                                                ? "scale-110 border-black"
-                                                : "border-gray-300 hover:border-gray-400"
-                                                }`}
-                                            title={color}
-                                        >
-                                            {swatch?.imageUrl ? (
-                                                <img
-                                                    src={swatch.imageUrl}
-                                                    alt={color}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            ) : (
-                                                <span className="flex h-full w-full items-center justify-center bg-gray-200 text-[8px] text-gray-500">
-                                                    ?
-                                                </span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => scrollColors(1)}
-                                className="shrink-0 rounded-full p-0.5 text-gray-400 hover:text-gray-700"
-                                aria-label="Próximas cores"
-                            >
-                                <ChevronRight size={16} />
-                            </button>
-                        </div>
+                        <ColorCarousel
+                            colors={product.colors}
+                            selectedColor={selectedColor}
+                            onSelect={setSelectedColor}
+                            swatches={swatches}
+                        />
                     </div>
                 )}
+
 
                 {/* Size Selector */}
                 {product.sizes.length > 0 && (
@@ -254,7 +210,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     </span>
                 </button>
 
-                <Link href={`/provador?produto=${product.id}`}>
+                {/* <Link href={`/provador?produto=${product.id}`}>
                     <button className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-[#8C2F39] py-3 text-sm font-medium text-[#8C2F39] transition-all hover:bg-[#8C2F39] hover:text-[#FAF6F2] md:text-base">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -273,7 +229,7 @@ export function ProductCard({ product }: ProductCardProps) {
                         <span className="sm:hidden">Provador</span>
                         <span className="hidden sm:inline">Provador Virtual</span>
                     </button>
-                </Link>
+                </Link> */}
             </div>
         </div>
     );

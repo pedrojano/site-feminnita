@@ -1,7 +1,7 @@
 "use client";
 
 import { Header } from "../../components/layout/Header";
-import { useAccount } from "../../hooks/useAccount";
+import { useAccount } from "../../hooks/count/useAccount";
 import { ProfileForm } from "../../components/account/ProfileForm";
 import { AddressManager } from "../../components/account/AddressManager";
 import { OrderDetailModal } from "../../components/account/OrderDetailModal";

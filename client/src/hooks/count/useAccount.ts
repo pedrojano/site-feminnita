@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../hooks/useAuth";
-import * as accountService from "../services/accountService";
-import * as addressesService from "../services/addressesService";
-import { fetchMyOrders } from "../services/ordersService";
+import { toast } from "sonner";
+import { useAuth } from "../../hooks/count/useAuth";
+import * as accountService from "../../services/accountService";
+import * as addressesService from "../../services/addressesService";
+import { fetchMyOrders } from "../../services/ordersService";
 import type {
   AccountCustomer,
   AccountOrder,
@@ -13,7 +14,7 @@ import type {
   Address,
   AddressInput,
   CustomerUpdate,
-} from "../types/account/account";
+} from "@/src/types/account/account";
 
 export function useAccount() {
   const router = useRouter();
@@ -63,9 +64,16 @@ export function useAccount() {
   };
 
   const saveProfile = async (data: CustomerUpdate) => {
-    const updated = await accountService.updateProfile(data);
-    setCustomer(updated);
-    await refresh();
+    try {
+      const updated = await accountService.updateProfile(data);
+      setCustomer(updated);
+      await refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar os dados",
+      );
+      throw error;
+    }
   };
 
   const reloadAddresses = async () => {
@@ -73,18 +81,37 @@ export function useAccount() {
   };
 
   const addAddress = async (input: AddressInput) => {
-    await addressesService.createAddress(input);
-    await reloadAddresses();
+    try {
+      await addressesService.createAddress(input);
+      await reloadAddresses();
+      toast.success("Endereço adicionado!");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar o endereço",
+      );
+    }
   };
 
   const editAddress = async (id: string, input: AddressInput) => {
-    await addressesService.updateAddress(id, input);
-    await reloadAddresses();
+    try {
+      await addressesService.updateAddress(id, input);
+      await reloadAddresses();
+      toast.success("Endereço atualizado!");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar o endereço",
+      );
+    }
   };
 
   const removeAddress = async (id: string) => {
-    await addressesService.deleteAddress(id);
-    await reloadAddresses();
+    try {
+      await addressesService.deleteAddress(id);
+      await reloadAddresses();
+      toast.success("Endereço excluído");
+    } catch {
+      toast.error("Não foi possível excluir o endereço");
+    }
   };
 
   return {
