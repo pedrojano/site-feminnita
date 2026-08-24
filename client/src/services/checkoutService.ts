@@ -52,6 +52,18 @@ export async function createOrder(input: {
     };
 }
 
+export async function previewCoupon(
+    code: string,
+    subtotal: number,
+): Promise<{ code: string; discount: number }> {
+    const data = (await apiPost<{ code: string; discount: number }>(
+        "/api/store/orders/coupon/preview",
+        { code, subtotal },
+    )) as { code: string; discount: number };
+
+    return data;
+}
+
 const ERROR_MESSAGES: [string, string][] = [
     ["EMPTY_CART", "Seu carrinho está vazio."],
     ["PRODUCT_UNAVAILABLE", "Um dos produtos não está mais disponível."],
@@ -61,6 +73,9 @@ const ERROR_MESSAGES: [string, string][] = [
     ["COUPON_ALREADY_USED", "Você já usou este cupom em outro pedido."],
     ["COUPON_EXHAUSTED", "Este cupom esgotou."],
     ["COUPON_MAX_USES_REACHED", "Este cupom esgotou."],
+    ["COUPON_INACTIVE", "Este cupom não está mais ativo."],
+    ["COUPON_EXPIRED", "Este cupom expirou."],
+    ["COUPON_MIN_ORDER", "O pedido não atinge o valor mínimo deste cupom."],
     ["CPF_REQUIRED", "Informe um CPF válido para continuar."],
     ["SHIPPING_CEP_REQUIRED", "Informe o CEP de entrega."],
     [
@@ -76,4 +91,9 @@ const ERROR_MESSAGES: [string, string][] = [
 export function mapOrderError(rawMessage: string): string {
     const found = ERROR_MESSAGES.find(([code]) => rawMessage.includes(code));
     return found ? found[1] : "Erro ao processar o pedido. Tente novamente.";
+}
+
+export function mapCouponError(rawMessage: string): string {
+    const found = ERROR_MESSAGES.find(([code]) => rawMessage.includes(code));
+    return found ? found[1] : "Não foi possível validar o cupom. Tente novamente.";
 }

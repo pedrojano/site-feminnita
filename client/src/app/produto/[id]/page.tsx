@@ -17,9 +17,8 @@ import { ProductGallery } from "../../../components/product/ProductGallery";
 import { QuantitySelector } from "../../../components/product/QuantitySelector";
 import { SizeSelector } from "../../../components/product/SizeSelector";
 import { StickyMobileCta } from "../../../components/product/StickMobileCta";
-import { useProductPage } from "../../../hooks/useProductPage";
+import { useProductPage } from "../../../hooks/product/useProductPage";
 import { toEmbedUrl } from "../../../utils/product";
-import { Check } from "lucide-react";
 
 export default function ProductPage() {
     const {
@@ -38,11 +37,11 @@ export default function ProductPage() {
         setQuantity,
         isFavorite,
         setIsFavorite,
-        toast,
         stickyVisible,
         mainCTARef,
         displayImages,
         handleAddToCart,
+        skus,
     } = useProductPage();
 
     if (loadingProduct) {
@@ -87,13 +86,6 @@ export default function ProductPage() {
                 ])}
             />
             <Header />
-
-            {toast && (
-                <div className="fixed left-1/2 top-24 z-50 flex -translate-x-1/2 animate-fade-in items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-sm text-white shadow-lg md:top-28">
-                    <Check size={16} className="text-green-400" />
-                    {toast}
-                </div>
-            )}
 
             <StickyMobileCta
                 visible={stickyVisible}
@@ -154,6 +146,7 @@ export default function ProductPage() {
                             sizes={product.sizes}
                             selectedSize={selectedSize}
                             selectedColor={selectedColor}
+                            skus={skus}
                             onSelect={setSelectedSize}
                         />
 

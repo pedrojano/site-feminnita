@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { fetchColorSwatches } from "../services/colorsService";
-import type { ColorSwatch } from "../types/colors/colors";
+import { fetchColorSwatches } from "../../services/colorsService";
+import type { ColorSwatch } from "../../types/colors/colors";
 
 const ColorSwatchContext = createContext<ColorSwatch[]>([]);
 

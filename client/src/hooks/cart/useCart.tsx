@@ -13,10 +13,10 @@ import {
     setAllSelected,
     setQuantityAt,
     toggleSelectedAt,
-} from "../utils/cart";
-import * as cartService from "../services/cartService";
-import { useAuth } from "../hooks/useAuth";
-import type { CartItem, CartValue } from "../types/cart/cart";
+} from "../../utils/cart";
+import * as cartService from "../../services/cartService";
+import { useAuth } from "../../hooks/count/useAuth";
+import type { CartItem, CartValue } from "../../types/cart/cart";
 
 const CartContext = createContext<CartValue | null>(null);
 

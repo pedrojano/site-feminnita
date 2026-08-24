@@ -1,12 +1,17 @@
 "use client";
 
 import { Header } from "../../components/layout/Header";
-import { useAuth } from "../../hooks/useAuth";
-import { useCart } from "../../hooks/useCart";
-import { useCep } from "../../hooks/useCep";
+import { useAuth } from "../../hooks/count/useAuth";
+import { useCart } from "../../hooks/cart/useCart";
+import { useCep } from "../../hooks/count/useCep";
 import { fetchProfile, updateProfile } from "../../services/accountService";
 import { fetchAddresses } from "../../services/addressesService";
-import { createOrder, mapOrderError } from "../../services/checkoutService";
+import {
+    createOrder,
+    mapCouponError,
+    mapOrderError,
+    previewCoupon,
+} from "../../services/checkoutService";
 import { quoteShipping } from "../../services/shippingService";
 import { ApiError } from "../../services/api";
 import {
@@ -35,6 +40,76 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+
+type AppliedCoupon = { code: string; discount: number };
+
+function CouponBox({
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    loading,
+    onApply,
+    onRemove,
+}: {
+    couponCode: string;
+    setCouponCode: (v: string) => void;
+    appliedCoupon: AppliedCoupon | null;
+    loading: boolean;
+    onApply: () => void;
+    onRemove: () => void;
+}) {
+    if (appliedCoupon) {
+        return (
+            <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                <span className="flex items-center gap-1.5 text-sm font-medium text-green-700">
+                    <Tag size={13} /> {appliedCoupon.code} — R${" "}
+                    {appliedCoupon.discount.toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                    })}{" "}
+                    de desconto
+                </span>
+                <button
+                    type="button"
+                    onClick={onRemove}
+                    className="text-xs font-medium text-gray-400 hover:text-red-500"
+                >
+                    Remover
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div>
+            <div className="flex gap-2">
+                <input
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="CUPOM"
+                    className="w-full rounded-lg border px-3 py-2 font-mono text-sm uppercase focus:ring-2 focus:ring-[#8C2F39]"
+                />
+                <button
+                    type="button"
+                    onClick={onApply}
+                    disabled={loading || !couponCode.trim()}
+                    className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+                >
+                    {loading ? (
+                        <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                        "Aplicar"
+                    )}
+                </button>
+            </div>
+            {couponCode.trim() && (
+                <p className="mt-1 text-xs text-gray-400">
+                    Clique em Aplicar para validar o cupom.
+                </p>
+            )}
+        </div>
+    );
+}
 
 export default function CheckoutPage() {
     const router = useRouter();
@@ -50,6 +125,8 @@ export default function CheckoutPage() {
     const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
     const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
     const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+    const [couponLoading, setCouponLoading] = useState(false);
     const [error, setError] = useState("");
     const [summaryOpen, setSummaryOpen] = useState(false);
     const beginTracked = useRef(false);
@@ -75,7 +152,6 @@ export default function CheckoutPage() {
 
     const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-    // Guarda de rota + carrinho vazio
     useEffect(() => {
         if (authLoading || !ready || isProcessing) return;
 
@@ -99,7 +175,7 @@ export default function CheckoutPage() {
         }
     }, [authLoading, ready, customer, selectedItems, router, isProcessing]);
 
-    // Pré-preenchimento: perfil + endereço padrão
+
     useEffect(() => {
         if (authLoading || !customer) return;
 
@@ -132,7 +208,10 @@ export default function CheckoutPage() {
     const discount = Number(
         (paymentMethod === "pix" ? subtotal * PIX_DISCOUNT_RATE : 0).toFixed(2),
     );
-    const total = Number((subtotal + shippingCost - discount).toFixed(2));
+    const couponDiscount = appliedCoupon?.discount ?? 0;
+    const total = Number(
+        (subtotal + shippingCost - discount - couponDiscount).toFixed(2),
+    );
 
     const calculateShipping = async (cep: string) => {
         setIsCalculatingShipping(true);
@@ -168,7 +247,6 @@ export default function CheckoutPage() {
         calculateShipping(cep);
     };
 
-    // Cota automaticamente quando o CEP veio do endereço salvo
     useEffect(() => {
         const cep = form.cep.replace(/\D/g, "");
         if (
@@ -179,8 +257,33 @@ export default function CheckoutPage() {
             autoShippingDone.current = true;
             calculateShipping(cep);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form.cep, selectedItems]);
+
+    const handleApplyCoupon = async () => {
+        const code = couponCode.trim().toUpperCase();
+        if (!code) return;
+
+        setCouponLoading(true);
+        try {
+            const result = await previewCoupon(code, subtotal);
+            setAppliedCoupon(result);
+            toast.success(`Cupom ${result.code} aplicado!`);
+        } catch (err) {
+            setAppliedCoupon(null);
+            toast.error(
+                err instanceof ApiError
+                    ? mapCouponError(err.message)
+                    : "Não foi possível validar o cupom. Tente novamente.",
+            );
+        } finally {
+            setCouponLoading(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponCode("");
+    };
 
     const selectPayment = (method: "pix" | "boleto" | "card") => {
         setPaymentMethod(method);
@@ -222,7 +325,6 @@ export default function CheckoutPage() {
         setIsProcessing(true);
 
         try {
-            // 1. CPF/telefone vão pro cadastro (o backend cobra a partir dele)
             await updateProfile({
                 name: form.name,
                 phone: form.phone,
@@ -230,7 +332,6 @@ export default function CheckoutPage() {
                 birthDate: profile?.birthDate ?? null,
             });
 
-            // 2. Cria o pedido + cobrança
             const result = await createOrder({
                 items: selectedItems,
                 paymentMethod,
@@ -244,7 +345,7 @@ export default function CheckoutPage() {
                             cvv: form.card_cvv,
                         }
                         : undefined,
-                couponCode: couponCode.trim() || undefined,
+                couponCode: appliedCoupon?.code,
                 shippingServiceId: selectedShipping.id,
                 shippingAddress: {
                     cep: form.cep,
@@ -262,7 +363,7 @@ export default function CheckoutPage() {
                 selectedItems,
                 result.total,
                 shippingCost,
-                discount,
+                discount + couponDiscount,
             );
 
             sessionStorage.setItem("feminnita:lastOrder", JSON.stringify(result));
@@ -338,20 +439,35 @@ export default function CheckoutPage() {
                         </div>
                     </button>
                     {summaryOpen && (
-                        <div className="divide-y border-t px-4 pb-4 text-sm">
-                            {selectedItems.map((item, i) => (
-                                <div key={i} className="flex justify-between py-2">
-                                    <span className="text-gray-700">
-                                        {item.quantity}× {item.name}
-                                    </span>
-                                    <span className="font-medium">
-                                        R${" "}
-                                        {(item.price * item.quantity).toLocaleString("pt-BR", {
-                                            minimumFractionDigits: 2,
-                                        })}
-                                    </span>
-                                </div>
-                            ))}
+                        <div className="border-t px-4 pb-4 text-sm">
+                            <div className="divide-y">
+                                {selectedItems.map((item, i) => (
+                                    <div key={i} className="flex justify-between py-2">
+                                        <span className="text-gray-700">
+                                            {item.quantity}× {item.name}
+                                        </span>
+                                        <span className="font-medium">
+                                            R${" "}
+                                            {(item.price * item.quantity).toLocaleString("pt-BR", {
+                                                minimumFractionDigits: 2,
+                                            })}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="border-t pt-3">
+                                <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                                    <Tag size={12} /> Cupom de desconto
+                                </label>
+                                <CouponBox
+                                    couponCode={couponCode}
+                                    setCouponCode={setCouponCode}
+                                    appliedCoupon={appliedCoupon}
+                                    loading={couponLoading}
+                                    onApply={handleApplyCoupon}
+                                    onRemove={handleRemoveCoupon}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
@@ -483,8 +599,8 @@ export default function CheckoutPage() {
                                             <label
                                                 key={opt.id}
                                                 className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-3 transition-all ${selectedShipping?.id === opt.id
-                                                        ? "border-[#8C2F39] bg-rose-50"
-                                                        : "border-gray-200"
+                                                    ? "border-[#8C2F39] bg-rose-50"
+                                                    : "border-gray-200"
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -532,8 +648,8 @@ export default function CheckoutPage() {
                                 {/* PIX destaque */}
                                 <label
                                     className={`mb-3 flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${paymentMethod === "pix"
-                                            ? "border-green-500 bg-green-50"
-                                            : "border-gray-200"
+                                        ? "border-green-500 bg-green-50"
+                                        : "border-gray-200"
                                         }`}
                                 >
                                     <input
@@ -583,8 +699,8 @@ export default function CheckoutPage() {
                                     <label
                                         key={id}
                                         className={`mb-3 flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${paymentMethod === id
-                                                ? "border-[#8C2F39] bg-rose-50"
-                                                : "border-gray-200"
+                                            ? "border-[#8C2F39] bg-rose-50"
+                                            : "border-gray-200"
                                             }`}
                                     >
                                         <input
@@ -709,17 +825,14 @@ export default function CheckoutPage() {
                                     <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-gray-500">
                                         <Tag size={12} /> Cupom de desconto
                                     </label>
-                                    <input
-                                        value={couponCode}
-                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                        placeholder="FEMINNITA10"
-                                        className="w-full rounded-lg border px-3 py-2 font-mono text-sm uppercase focus:ring-2 focus:ring-[#8C2F39]"
+                                    <CouponBox
+                                        couponCode={couponCode}
+                                        setCouponCode={setCouponCode}
+                                        appliedCoupon={appliedCoupon}
+                                        loading={couponLoading}
+                                        onApply={handleApplyCoupon}
+                                        onRemove={handleRemoveCoupon}
                                     />
-                                    {couponCode && (
-                                        <p className="mt-1 text-xs text-gray-400">
-                                            O desconto do cupom é aplicado ao finalizar o pedido.
-                                        </p>
-                                    )}
                                 </div>
 
                                 <div className="space-y-2 border-t pt-3 text-sm">
@@ -748,6 +861,17 @@ export default function CheckoutPage() {
                                             <span>
                                                 - R${" "}
                                                 {discount.toLocaleString("pt-BR", {
+                                                    minimumFractionDigits: 2,
+                                                })}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {appliedCoupon && (
+                                        <div className="flex justify-between font-medium text-green-600">
+                                            <span>Cupom {appliedCoupon.code}</span>
+                                            <span>
+                                                - R${" "}
+                                                {couponDiscount.toLocaleString("pt-BR", {
                                                     minimumFractionDigits: 2,
                                                 })}
                                             </span>

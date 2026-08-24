@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import * as authService from "../services/authService";
-import type { Customer } from "../types/auth/auth";
+import * as authService from "../../services/authService";
+import type { Customer } from "../../types/auth/auth";
 
 type AuthValue = {
     customer: Customer | null;

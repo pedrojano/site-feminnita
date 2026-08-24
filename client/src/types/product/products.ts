@@ -57,6 +57,7 @@ export type SizeSelectorProps = {
   sizes: string[];
   selectedSize: string;
   selectedColor: string;
+  skus: SkuStock[];
   onSelect: (size: string) => void;
 };
 
@@ -97,3 +98,10 @@ export type SkuStock = {
   availableQty: number;
   stockStatus: "in_stock" | "low_stock" | "out_of_stock";
 };
+
+
+export type SelectedProduct = {
+  skus: SkuStock[];
+  selectedSize: string;
+  selectedColor?: string;
+}
