@@ -1,23 +1,3 @@
-// import express from 'express';
-// import cors from 'cors';
-// import { app } from './app';
-// import { env } from './config/env';
-// import { startExpireOrderJob } from './jobs/expireOrder.Job';
-
-// const app = express();
-
-// app.use(cors({
-//     origin: [
-//         'https://site-feminnita.vercel.app',
-//         'http://localhost:3000'
-//     ],
-//     credentials: true
-// }));
-
-// app.listen(env.port, () => {
-//     console.log(`Server is Runing on Port ${env.port}`)
-// })
-
 import express from 'express';
 import cors from 'cors';
 import { routes } from './routes/routes';
@@ -31,7 +11,11 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        const isVercelPreview =
+            origin?.startsWith('https://site-feminnita') &&
+            origin?.endsWith('.vercel.app');
+
+        if (!origin || allowedOrigins.includes(origin) || isVercelPreview) {
             callback(null, true);
         } else {
             callback(new Error('Bloqueado pelo CORS'));
@@ -42,8 +26,10 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+
 app.use(express.json());
 app.use(routes);
+app.set('trust proxy', 1)
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
