@@ -1,5 +1,6 @@
 import { Header } from "../components/layout/Header";
 import { HeroCarousel } from "../components/home/HeroCarousel";
+import { Vitrine } from "../components/home/Vitrine";
 // import { InstagramFeed } from "../components/InstagramFeed";
 // import { Newsletter } from "../components/Newsletter";
 import { ProductCard } from "../components/product/ProductCard";
@@ -31,6 +32,8 @@ export default async function Home() {
     <div className="min-h-screen">
       <Header />
       <HeroCarousel slides={slides} />
+      {/* Newsletter */}
+      {/* <Newsletter /> */}
 
       {/* Lançamentos */}
       <section className="container mx-auto px-4 py-16">
@@ -73,41 +76,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Vídeo */}
-      {videoSection && (
-        <section className="bg-black py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="mb-12 text-center text-3xl font-light text-white">
-              {videoSection.title}
-            </h2>
-            <div className="mx-auto aspect-video max-w-5xl overflow-hidden rounded-lg bg-gray-800">
-              <iframe
-                width="100%"
-                height="100%"
-                src={`https://www.youtube.com/embed/${videoSection.videoId}`}
-                title={videoSection.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Outlet */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="mb-12 text-center">
-          <h2 className="mb-2 text-3xl font-light">Outlet</h2>
-          <p className="text-xl font-semibold text-red-600">até 50% OFF</p>
-        </div>
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {(outlet.length ? outlet : all.slice(0, 4)).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
-
       {/* Grid de Imagens */}
       {imageGrid.images.length > 0 && (
         <section className="container mx-auto px-4 py-16">
@@ -129,11 +97,24 @@ export default async function Home() {
         </section>
       )}
 
+      {/* Outlet */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="mb-12 text-center">
+          <h2 className="mb-2 text-3xl font-light">Outlet</h2>
+          <p className="text-xl font-semibold text-red-600">até 50% OFF</p>
+        </div>
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {(outlet.length ? outlet : all.slice(0, 4)).map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
+
+      {/*VIDEO*/}
+      {videoSection && <Vitrine videoSection={videoSection} />}
+
       {/* Instagram Feed */}
       {/* <InstagramFeed /> */}
-
-      {/* Newsletter */}
-      {/* <Newsletter /> */}
 
       {/* Footer */}
       <footer className="border-t bg-white py-12">
