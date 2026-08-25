@@ -44,10 +44,11 @@ function mapIntermediateBanner(value: any): IntermediateBanner | null {
 }
 
 function mapVideoSection(value: any): VideoSection | null {
-  if (!value?.videoId) return null;
+  if (!value?.desktopUrl) return null;
   return {
-    title: value.title ?? "",
-    videoId: value.videoId,
+    desktopUrl: value.desktopUrl,
+    mobileUrl: value.mobileUrl ?? "",
+    href: value.href || undefined,
   };
 }
 

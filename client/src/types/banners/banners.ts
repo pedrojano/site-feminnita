@@ -36,8 +36,9 @@ export type IntermediateBanner = {
 };
 
 export type VideoSection = {
-    title: string;
-    videoId: string;
+    desktopUrl: string;
+    mobileUrl: string;
+    href?: string;
 };
 
 export type ImageGridItem = {
