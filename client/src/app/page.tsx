@@ -9,6 +9,8 @@ import { fetchProducts } from "../services/productsService";
 import Image from "next/image";
 import Link from "next/link";
 
+export const revalidate = 60;
+
 async function getHomeProducts() {
   const products = await fetchProducts({ limit: 20 });
 
